@@ -1,11 +1,12 @@
 'use client'
-import { Pencil, PlusCircle, Trash2 } from 'lucide-react';
+import { Pencil, PlusCircle, Trash2, ShoppingCart, CheckSquare, Check, CircleCheckBig, CircleMinus } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 interface Task {
     text: string;
     date?: string;
     value?: number;
+    completed?: boolean;
 }
 
 export default function TodoList() {
@@ -20,7 +21,6 @@ export default function TodoList() {
     const [showAlert, setShowAlert] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');
 
-    // Carrega as tarefas do localStorage quando o componente é montado
     useEffect(() => {
         const savedTasks = localStorage.getItem('tasks');
         if (savedTasks) {
@@ -28,7 +28,6 @@ export default function TodoList() {
         }
     }, []);
 
-    // Salva as tarefas no localStorage sempre que houver mudanças
     useEffect(() => {
         localStorage.setItem('tasks', JSON.stringify(tasks));
     }, [tasks]);
@@ -48,7 +47,8 @@ export default function TodoList() {
         const newTask: Task = {
             text: taskText,
             date: taskDate,
-            value: taskValue
+            value: taskValue,
+            completed: false
         };
         setTasks([...tasks, newTask]);
         setTaskText('');
@@ -61,10 +61,12 @@ export default function TodoList() {
     };
 
     const startEditing = (index: number, task: Task) => {
-        setEditingIndex(index);
-        setEditingText(task.text);
-        setEditingDate(task.date || '');
-        setEditingValue(task.value);
+        if (!task.completed) {
+            setEditingIndex(index);
+            setEditingText(task.text);
+            setEditingDate(task.date || '');
+            setEditingValue(task.value);
+        }
     };
 
     const saveEdit = () => {
@@ -73,7 +75,8 @@ export default function TodoList() {
             newTasks[editingIndex] = {
                 text: editingText,
                 date: editingDate || undefined,
-                value: editingValue
+                value: editingValue,
+                completed: tasks[editingIndex].completed
             };
             setTasks(newTasks);
             setEditingIndex(null);
@@ -88,6 +91,15 @@ export default function TodoList() {
         setEditingText('');
         setEditingDate('');
         setEditingValue(undefined);
+    };
+
+    const toggleComplete = (index: number) => {
+        const newTasks = [...tasks];
+        newTasks[index] = {
+            ...newTasks[index],
+            completed: !newTasks[index].completed
+        };
+        setTasks(newTasks);
     };
 
     return (
@@ -139,7 +151,7 @@ export default function TodoList() {
                 {tasks.map((task, index) => (
                     <li
                         key={index}
-                        className="text-blue-800 flex justify-between items-center p-2 bg-gray-100 rounded-md"
+                        className={`text-blue-800 flex justify-between items-center p-2 rounded-md ${task.completed ? 'bg-green-50' : 'bg-gray-100'}`}
                     >
                         {editingIndex === index ? (
                             <div className="flex gap-2 flex-1">
@@ -179,19 +191,37 @@ export default function TodoList() {
                             </div>
                         ) : (
                             <>
-                                <div className="flex flex-col">
-                                    <span className="text-lg font-semibold">{task.text}</span>
-                                    <div className="text-xs text-gray-500">
-                                        <span className="mr-4">Data: {task.date ? new Date(task.date).toLocaleDateString('pt-BR') : 'Não definida'}</span>
-                                        {task.value && <span>Valor: R$ {task.value.toFixed(2)}</span>}
+                                <div className="flex items-center gap-3">
+                                    {task.value ? (
+                                        <ShoppingCart size={20} className={task.completed ? "text-green-300" : "text-green-500"} />
+                                    ) : (
+                                        <CheckSquare size={20} className={task.completed ? "text-blue-300" : "text-blue-500"} />
+                                    )}
+                                    <div className="flex flex-col">
+                                        <span className={`text-lg font-semibold ${task.completed ? 'text-green-500 line-through' : ''}`}>{task.text}</span>
+                                        <div className="text-xs text-gray-500">
+                                            <span className="mr-4">Data: {task.date ? new Date(task.date).toLocaleDateString('pt-BR') : 'Não definida'}</span>
+                                            {task.value && <span>Valor: R$ {task.value.toFixed(2)}</span>}
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="flex gap-4">
                                     <button
                                         onClick={() => startEditing(index, task)}
-                                        className="text-blue-500 hover:text-blue-700"
+                                        className={`text-blue-500 hover:text-blue-700 ${task.completed ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        disabled={task.completed}
                                     >
                                         <Pencil size={18} />
+                                    </button>
+                                    <button
+                                        onClick={() => toggleComplete(index)}
+                                        className={`${task.completed ? 'text-red-500' : 'text-green-500 hover:text-green-700'}`}
+                                    >
+                                        {task.completed ? (
+                                            <CircleMinus size={18} />
+                                        ) : (
+                                            <CircleCheckBig size={18} />
+                                        )}
                                     </button>
                                     <button
                                         onClick={() => removeTask(index)}
