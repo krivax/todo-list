@@ -1,5 +1,6 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Lista de Tarefas
 
+sistema para fazer um todo-list com Next.js, Tailwind e Lucide. Salvando as tarefas no localStorage.
 ## Getting Started
 
 First, run the development server:
